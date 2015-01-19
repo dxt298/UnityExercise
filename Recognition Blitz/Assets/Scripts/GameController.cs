@@ -14,7 +14,7 @@ public class GameController : MonoBehaviour {
     public float startWait = 3.0f;
     public float spawnWait = 2.0f;
     private float startTime;
-    private float timer;
+    private float reactionTime;
     //UI
     public GUIText menuText;
     public GUIText scoreText;
@@ -64,7 +64,7 @@ public class GameController : MonoBehaviour {
                 if (Input.GetKeyDown(KeyCode.Alpha7)) { waves = 7; }
                 if (Input.GetKeyDown(KeyCode.Alpha8)) { waves = 8; }
                 if (Input.GetKeyDown(KeyCode.Alpha9)) { waves = 9; }
-                if (Input.GetKeyDown(KeyCode.Space))
+                if (Input.GetKeyDown(KeyCode.Space) && waves != 0)
                 {
                     _gameState = GameState.inGame;
                     menuText.text = "";
@@ -73,10 +73,12 @@ public class GameController : MonoBehaviour {
                 }
                 break;
             case GameState.inGame:
-                Debug.Log("press button time");
+                float test = Math.Abs(startTime - Time.time);
+                timerText.text = test.ToString();
                 if (Input.GetKeyDown(KeyCode.Space))
                 {
-                   
+                    reactionTime = Time.time - startTime;
+                    Debug.Log(reactionTime);
                 }
                 UpdateScore();
                 break;
@@ -104,7 +106,7 @@ public class GameController : MonoBehaviour {
                 {
                     GameObject current = Pick(possibilities);
                     current.SetActive(true);
-                    //startTime = Time.time;
+                    startTime = Time.time;
                     yield return new WaitForSeconds(delay);
                     current.SetActive(false);
                     yield return new WaitForSeconds(spawnWait);
