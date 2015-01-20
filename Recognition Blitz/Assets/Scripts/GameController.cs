@@ -8,19 +8,20 @@ using Random = UnityEngine.Random;
 public class GameController : MonoBehaviour {
     //Game logic
     public List<GameObject> possibilities;
-    public int objectsPerWave = 2;
+    public int objectsPerWave = 10;
     public int waves = 0;
-    public float delay = 2.0f;
-    public float startWait = 3.0f;
-    public float spawnWait = 2.0f;
+    public float delay = 1.0f;
+    public float startWait = 1.0f;
     private float startTime;
     private float reactionTime;
+    public GameObject current;
     //UI
     public GUIText menuText;
     public GUIText scoreText;
     public GUIText restartText;
     public GUIText gameOverText;
     public GUIText timerText;
+    public GUIText gameText;
     //Game logic
     private GameState _gameState;
     private enum GameState
@@ -38,6 +39,7 @@ public class GameController : MonoBehaviour {
         scoreText.text = "";
         restartText.text = "";
         gameOverText.text = "";
+        gameText.text = "";
         timerText.text = "Time";
 
         _gameState = GameState.menu;
@@ -78,7 +80,15 @@ public class GameController : MonoBehaviour {
                 if (Input.GetKeyDown(KeyCode.Space))
                 {
                     reactionTime = Time.time - startTime;
-                    Debug.Log(reactionTime);
+                    //Debug.Log(reactionTime);
+                    if (current.GetComponent<Object>().winner)
+                    {
+                        Debug.Log("Winner");
+                    }
+                    else
+                    {
+                        Debug.Log("Loser");
+                    }
                 }
                 UpdateScore();
                 break;
@@ -99,17 +109,31 @@ public class GameController : MonoBehaviour {
     {
         if(_gameState == GameState.inGame)
         {
-            yield return new WaitForSeconds(startWait);
             for (int j = 0; j < waves; j++)
             {
+                //Pick a target
+                current = Pick(possibilities);
+                current.GetComponent<Object>().winner = true;
+                current.SetActive(true);
+                gameText.text = "This is your target";
+                yield return new WaitForSeconds(startWait);
+                current.SetActive(false);
+                gameText.text = "Get ready...";
+                yield return new WaitForSeconds(startWait);
+                gameText.text = "";
+
                 for (int i = 0; i < objectsPerWave; i++)
                 {
-                    GameObject current = Pick(possibilities);
+                    current = Pick(possibilities);
                     current.SetActive(true);
                     startTime = Time.time;
                     yield return new WaitForSeconds(delay);
                     current.SetActive(false);
-                    yield return new WaitForSeconds(spawnWait);
+                    yield return new WaitForSeconds(delay);
+                }
+                foreach(GameObject go in possibilities)
+                {
+                    go.GetComponent<Object>().winner = false;
                 }
             }
         }
