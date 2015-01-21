@@ -21,8 +21,8 @@ public class GameController : MonoBehaviour {
     public GUIText scoreText;
     public GUIText restartText;
     public GUIText gameOverText;
-    public GUIText timerText;
     public GUIText gameText;
+    public GUIText titleText;
 
     //Game state
     private List<GameObject> possibilities;
@@ -40,11 +40,11 @@ public class GameController : MonoBehaviour {
 	// Use this for initialization
 	void Start () {
         menuText.text = "";
+        titleText.text = "";
         scoreText.text = "";
         restartText.text = "";
         gameOverText.text = "";
         gameText.text = "";
-        timerText.text = "Time";
 
         _gameState = GameState.menu;
         score = 0;
@@ -61,7 +61,11 @@ public class GameController : MonoBehaviour {
         switch (_gameState)
         {
             case GameState.menu:
-                menuText.text = "Recognition Blitz \n1-9 for trial amount";
+                titleText.text = "Recognition Blitz";
+                menuText.text = "Press a number 1-9 for trial amount: ";
+                menuText.text += waves.ToString();
+                menuText.text += "\nThen press space to start";
+                gameText.text = "Your target will be shown at the beginning of a wave.\nDuring the wave, press the spacebar if your target shows up to gain points.\nIf you're wrong, you lose points.  Aim for the high score!";
                 score = 0;
 
                 if (Input.GetKeyDown(KeyCode.Alpha1)) { waves = 1; }
@@ -77,34 +81,32 @@ public class GameController : MonoBehaviour {
                 {
                     _gameState = GameState.inGame;
                     menuText.text = "";
+                    titleText.text = "";
                     UpdateScore();
                     StartCoroutine(StartWaves());
                 }
                 break;
             case GameState.inGame:
-                float test = Math.Abs(startTime - Time.time);
-                timerText.text = test.ToString();
-                if (Input.GetKeyDown(KeyCode.Space) && !pressed)
+                if (Input.GetKeyDown(KeyCode.Space) && !pressed && ((Time.time - startTime) <= 2.0f))
                 {
                     reactionTime = Time.time - startTime;
+                    gameText.text = "Reaction: " + reactionTime.ToString() + " seconds";
                     if (current.GetComponent<Object>().winner)
                     {
                         pressed = true;
                         rightCount++;
                         score +=  (1/reactionTime) * 100;
-                        finalScore = score / rightCount;
                     }
                     else
                     {
                         pressed = false;
                         score -= (1/reactionTime) * 25;
-                        finalScore = score;
                     }
                 }
                 UpdateScore();
                 break;
             case GameState.gameOver:
-                 restartText.text = "Press Space to return to menu";
+                 restartText.text = "Your score was " + (int)score + "!\nPress Space to return to menu";
                 _gameState = GameState.restart;
                 break;
             case GameState.restart:
@@ -128,17 +130,27 @@ public class GameController : MonoBehaviour {
                 current = Pick(possibilities);
                 current.GetComponent<Object>().winner = true;
                 current.SetActive(true);
-                gameText.text = "This is your target";
+                gameText.text = "This is your new target";
                 yield return new WaitForSeconds(delay);
                 current.SetActive(false);
                 gameText.text = "Get ready...";
                 yield return new WaitForSeconds(delay);
                 gameText.text = "";
 
+
+                for (int i = 0; i < possibilities.Count(); i++)
+                {
+                    GameObject temp = possibilities[i];
+                    int randomIndex = Random.Range(i, possibilities.Count());
+                    possibilities[i] = possibilities[randomIndex];
+                    possibilities[randomIndex] = temp;
+                }
+
+
                 for (int i = 0; i < objectsPerWave; i++)
                 {
                     pressed = false;
-                    current = Pick(possibilities);
+                    current = possibilities[i];
                     current.SetActive(true);
                     startTime = Time.time;
                     yield return new WaitForSeconds(delay);
@@ -156,7 +168,7 @@ public class GameController : MonoBehaviour {
 
     void UpdateScore()
     {
-        scoreText.text = "Score: " + (int)finalScore;
+        scoreText.text = "Score: " + (int)score;
     }
 
     void GameOver()
@@ -165,7 +177,7 @@ public class GameController : MonoBehaviour {
         _gameState = GameState.gameOver;
     }
 
-    T Pick<T>(List<T> from)
+    public static T Pick<T>(List<T> from)
     {
         if (from.Count == 0) throw new Exception("Cannot pick from an empty list!");
         return (from[Random.Range(0, from.Count)]);
