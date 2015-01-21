@@ -9,16 +9,4 @@ public class Object : MonoBehaviour {
 	void Start () {
         winner = false;
 	}
-	
-	// Update is called once per frame
-	void Update () {
-        if (winner)
-        {
-            this.renderer.material.color = Color.red;
-        }
-        else
-        {
-            this.renderer.material.color = Color.white;
-        }
-	}
 }
